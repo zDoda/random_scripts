@@ -10,3 +10,9 @@ openai.OpenAIError: The api_key client option must be set either by passing api_
  create mode 100644 logfile.log
 To github.com:zDoda/random_scripts.git
    4c485ae..13a9dcc  main -> main
+[main 8ba4c33] Added a python script to calculate return on investment for a marketing manager. Allows for customization and expansion for specific requirements. Includes a function to calculate ROI and an example usage.
+ 3 files changed, 20 insertions(+), 80 deletions(-)
+ create mode 100644 2024-01-19 13:54:06.469435_Marketing Manager_script.py
+ delete mode 100755 goon.py
+To github.com:zDoda/random_scripts.git
+   13a9dcc..8ba4c33  main -> main

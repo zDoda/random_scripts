@@ -1,4 +1,4 @@
-```python
+
 # Here is a simple python script for a marketing manager
 # You can customize and expand this according to your specific requirements
 
@@ -11,4 +11,3 @@ investment_amount = 1000
 revenue_generated = 1500
 roi = calculate_roi(investment_amount, revenue_generated)
 print("The ROI is: {}%".format(roi))
-```
