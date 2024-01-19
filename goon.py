@@ -58,6 +58,7 @@ def create_script():
 
 
 def git_commit():
+    create_script()
     # Change to your repository directory
     repo_dir = "/Users/czook/Github/goon_cave/"
     commit_message = f"Auto commit on {datetime.datetime.now()}"
