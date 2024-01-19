@@ -1,0 +1,12 @@
+```python
+#!/bin/bash
+
+# Define source and destination directories
+source_dir="/path/to/source/directory"
+destination_dir="/path/to/external/drive"
+
+# Create a backup directory if it does not exist
+mkdir -p "$destination_dir/backup"
+
+# Use rsync to perform the backup
+rsync -av --delete "$source_dir" "$destination_dir/backup"
