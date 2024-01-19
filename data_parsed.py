@@ -1,4 +1,4 @@
-n
+
 class OperationsManager:
     def __init__(self, name, department):
         self.name = name
