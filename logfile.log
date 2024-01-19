@@ -4,3 +4,9 @@ Traceback (most recent call last):
   File "/Users/czook/Library/Python/3.9/lib/python/site-packages/openai/_client.py", line 92, in __init__
     raise OpenAIError(
 openai.OpenAIError: The api_key client option must be set either by passing api_key to the client or by setting the OPENAI_API_KEY environment variable
+[main 13a9dcc] Auto commit on 2024-01-19 13:43:05.281572
+ 2 files changed, 32 insertions(+)
+ create mode 100644 2024-01-19 13:43:05.280858_Data Scientist_script.py
+ create mode 100644 logfile.log
+To github.com:zDoda/random_scripts.git
+   4c485ae..13a9dcc  main -> main
