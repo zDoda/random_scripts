@@ -23,10 +23,12 @@ def render_3d_model(model_path, output_path, resolution=(1920, 1080), render_eng
     bpy.context.scene.render.filepath = output_path
     bpy.ops.render.render(write_still=True)
 
+
 def main():
     model_path = 'path/to/your/model.blend' # Provide the path to your .blend file
     output_path = 'path/to/your/output/image.png' # Provide the path to save your render
     render_3d_model(model_path, output_path)
+
 
 if __name__ == "__main__":
     main()
