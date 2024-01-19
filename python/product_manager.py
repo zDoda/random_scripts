@@ -24,3 +24,4 @@ product1.increase_quantity(10)
 print(product1.calculate_total_value())
 product1.decrease_quantity(5)
 print(product1.calculate_total_value())
+
