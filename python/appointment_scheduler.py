@@ -1,56 +1,60 @@
 #!/usr/bin/env python3
 import datetime
 
-class PatientAppointmentScheduler:
+class PatientScheduler:
     def __init__(self):
         self.appointments = {}
     
     def schedule_appointment(self, patient_id, date_time):
         if date_time in self.appointments:
-            print(f"The time slot on {date_time} is already booked. Please choose another time.")
-            return False
-        
-        self.appointments[date_time] = patient_id
-        print(f"Appointment scheduled for patient {patient_id} on {date_time}")
-        return True
-      
+            print(f"The time slot on {date_time} is already booked.")
+        else:
+            self.appointments[date_time] = patient_id
+            print(f"Appointment scheduled for patient {patient_id} on {date_time}.")
+
+    def reschedule_appointment(self, patient_id, current_date_time, new_date_time):
+        if current_date_time not in self.appointments or self.appointments[current_date_time] != patient_id:
+            print(f"No appointment found for patient {patient_id} on {current_date_time}.")
+        elif new_date_time in self.appointments:
+            print(f"The time slot on {new_date_time} is already booked.")
+        else:
+            del self.appointments[current_date_time]
+            self.appointments[new_date_time] = patient_id
+            print(f"Appointment rescheduled for patient {patient_id} from {current_date_time} to {new_date_time}.")
+
+    def cancel_appointment(self, patient_id, date_time):
+        if date_time not in self.appointments or self.appointments[date_time] != patient_id:
+            print(f"No appointment found for patient {patient_id} on {date_time}.")
+        else:
+            del self.appointments[date_time]
+            print(f"Appointment for patient {patient_id} on {date_time} has been canceled.")
+
     def schedule_follow_up(self, patient_id, days_after):
-        last_appointment_date = None
-        for appointment_date in sorted(self.appointments.keys()):
-            if self.appointments[appointment_date] == patient_id:
-                last_appointment_date = appointment_date
-        
-        if last_appointment_date is None:
-            print(f"No previous appointment found for patient {patient_id}.")
-            return False
-        
-        follow_up_date = last_appointment_date + datetime.timedelta(days=days_after)
-        return self.schedule_appointment(patient_id, follow_up_date)
-        
-    def cancel_appointment(self, date_time):
-        if date_time not in self.appointments:
-            print("No appointment found at the specified time.")
-            return False
-        
-        patient_id = self.appointments.pop(date_time)
-        print(f"Appointment for patient {patient_id} on {date_time} has been canceled.")
-        return True
+        date_time = datetime.datetime.now() + datetime.timedelta(days=days_after)
+        # Round the date_time to the next full hour
+        date_time = date_time.replace(minute=0, second=0, microsecond=0) + datetime.timedelta(hours=1)
+        self.schedule_appointment(patient_id, date_time)
     
-    def print_schedule(self):
-        print("Scheduled Appointments:")
+    def list_appointments(self):
         for date_time, patient_id in sorted(self.appointments.items()):
-            print(f"{date_time}: Patient {patient_id}")
+            print(f"Patient {patient_id} has an appointment on {date_time}.")
 
 # Example usage
 if __name__ == "__main__":
-    scheduler = PatientAppointmentScheduler()
-    patient_id_example = "P123456"
-    appointment_time = datetime.datetime(year=2023, month=4, day=20, hour=10, minute=30)
+    scheduler = PatientScheduler()
     
-    scheduler.schedule_appointment(patient_id_example, appointment_time)
-    scheduler.schedule_follow_up(patient_id_example, days_after=30)
-    scheduler.print_schedule()
-    
+    # Schedule some appointments
+    scheduler.schedule_appointment("Patient-001", datetime.datetime(2023, 4, 30, 9, 0))
+    scheduler.schedule_appointment("Patient-002", datetime.datetime(2023, 4, 30, 10, 0))
+
+    # Schedule a follow-up in 10 days
+    scheduler.schedule_follow_up("Patient-003", 10)
+
+    # Reschedule an appointment
+    scheduler.reschedule_appointment("Patient-002", datetime.datetime(2023, 4, 30, 10, 0), datetime.datetime(2023, 5, 1, 10, 0))
+
     # Cancel an appointment
-    scheduler.cancel_appointment(appointment_time)
-    scheduler.print_schedule()
+    scheduler.cancel_appointment("Patient-001", datetime.datetime(2023, 4, 30, 9, 0))
+
+    # List all appointments
+    scheduler.list_appointments()
