@@ -1,46 +1,36 @@
 #!/usr/bin/env python3
 
-import json
+import random
 
-# Define the FAQ dictionary
-faq_dict = {
-    "What is your return policy?":
-        "Our return policy lasts 30 days. If 30 days have gone by since your purchase, "
-        "unfortunately, we can’t offer you a refund or exchange. To be eligible for a return, your item must "
-        "be unused and in the same condition that you received it. It must also be in the original packaging.",
-    "How do I change my order?":
-        "If you need to change or cancel your order, please contact us immediately. Once our warehouse has "
-        "processed your order, we will be unable to make any changes.",
-    "Do you ship internationally?":
-        "Yes, we ship worldwide. Shipping costs will apply, and will be added at checkout. "
-        "We run discounts and promotions all year, so stay tuned for exclusive deals."
-}
+class FAQGenerator:
 
-# Function to auto-generate response templates based on frequently asked questions
-def generate_response_templates(faq):
-    templates = {}
-    for question, answer in faq.items():
-        template_name = "Response to \"" + question + "\""
-        templates[template_name] = {
-            "question": question,
-            "response": answer
+    def __init__(self):
+        self.faq_template = {
+            "greeting": ["Hello, how can I help you?", "Hi there! What would you like to know?", "Greetings! How may I assist you today?"],
+            "hours": ["We are open from {opening_time} to {closing_time}.", "Our working hours are from {opening_time} to {closing_time}.", "You can visit us between {opening_time} and {closing_time}."],
+            "location": ["We are located at {address}.", "You can find us at {address}.", "Our address is {address}."],
+            "payment_methods": ["We accept {methods}.", "You can pay through {methods}.", "The available payment methods are {methods}."],
+            "refund_policy": ["Our refund policy is: {policy}.", "Regarding refunds, {policy}.", "For refunds, {policy}."]
         }
-    return templates
 
-# Generate the response templates
-response_templates = generate_response_templates(faq_dict)
+    def get_response(self, faq_category, **kwargs):
+        if faq_category not in self.faq_template:
+            return "I'm sorry, but I don't have information on that topic."
 
-# Optionally write the response templates to a JSON file
-json_filename = "response_templates.json"
-with open(json_filename, 'w', encoding='utf-8') as f:
-    json.dump(response_templates, f, ensure_ascii=False, indent=4)
+        template_options = self.faq_template[faq_category]
+        template = random.choice(template_options)
+        response = template.format(**kwargs)
+        return response
 
-print(f"Response templates saved to {json_filename}")
+def main():
+    faq_gen = FAQGenerator()
 
-# To use a template, just call the function with a specific question
-def get_response(question):
-    return response_templates.get("Response to \"" + question + "\"", {}).get('response', "Sorry, I don't understand the question.")
+    # Example usage
+    print(faq_gen.get_response("greeting"))
+    print(faq_gen.get_response("hours", opening_time="9 AM", closing_time="5 PM"))
+    print(faq_gen.get_response("location", address="123 Example St."))
+    print(faq_gen.get_response("payment_methods", methods="cash, cards, and mobile payments"))
+    print(faq_gen.get_response("refund_policy", policy="you have 30 days to return your product for a full refund"))
 
-# Example of using the get_response function
-example_question = "Do you ship internationally?"
-print(f"Response to the question '{example_question}': {get_response(example_question)}")
+if __name__ == "__main__":
+    main(
