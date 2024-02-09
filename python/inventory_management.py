@@ -1,41 +1,81 @@
 #!/usr/bin/env python3
 
 import csv
-from datetime import datetime
+import datetime
 
-# Define the inventory file and order file
-inventory_file = 'inventory.csv'
-order_file = 'orders_to_place.csv'
 
-# Define thresholds and restock levels
-restock_threshold = 10  # The minimum amount before restocking
-restock_level = 25      # The amount to restock to
+class InventoryManagement:
+    def __init__(self, inventory_file):
+        self.inventory_file = inventory_file
+        self.inventory = self.load_inventory()
 
-# Inventory tracking and ordering function
-def check_inventory_and_create_orders(inventory_file, order_file, restock_threshold, restock_level):
-    inventory_to_restock = []
+    def load_inventory(self):
+        inventory = []
+        try:
+            with open(self.inventory_file, mode='r') as file:
+                csv_reader = csv.DictReader(file)
+                for row in csv_reader:
+                    row['expiration_date'] = datetime.datetime.strptime(row['expiration_date'], '%Y-%m-%d').date()
+                    inventory.append(row)
+        except FileNotFoundError:
+            print("Inventory file not found.")
+        return inventory
 
-    # Read the inventory file
-    with open(inventory_file, mode='r') as file:
-        csv_reader = csv.DictReader(file)
-        for row in csv_reader:
-            if int(row['Quantity']) < restock_threshold:
-                restock_amount = restock_level - int(row['Quantity'])
-                inventory_to_restock.append({'Product ID': row['Product ID'], 'Product Name': row['Product Name'], 'Quantity to Order': restock_amount})
-
-    # Write to the order file if restocking needed
-    if inventory_to_restock:
-        with open(order_file, mode='w', newline='') as file:
-            fieldnames = ['Product ID', 'Product Name', 'Quantity to Order', 'Order Date']
-            csv_writer = csv.DictWriter(file, fieldnames=fieldnames)
+    def save_inventory(self):
+        fields = ['item_id', 'item_name', 'quantity', 'expiration_date']
+        with open(self.inventory_file, mode='w') as file:
+            csv_writer = csv.DictWriter(file, fieldnames=fields)
             csv_writer.writeheader()
-            for item in inventory_to_restock:
-                item['Order Date'] = datetime.now().strftime('%Y-%m-%d')
+            for item in self.inventory:
+                item['expiration_date'] = item['expiration_date'].strftime('%Y-%m-%d')
                 csv_writer.writerow(item)
-        print(f"Order file '{order_file}' has been updated with restock orders.")
-    else:
-        print("No restocking required at this time.")
 
-# Execute the function
+    def add_item(self, item_id, item_name, quantity, expiration_date):
+        new_item = {
+            'item_id': item_id,
+            'item_name': item_name,
+            'quantity': quantity,
+            'expiration_date': datetime.datetime.strptime(expiration_date, '%Y-%m-%d').date()
+        }
+        self.inventory.append(new_item)
+        self.save_inventory()
+
+    def remove_item(self, item_id, quantity):
+        for item in self.inventory:
+            if item['item_id'] == item_id and int(item['quantity']) >= quantity:
+                item['quantity'] = int(item['quantity']) - quantity
+                self.save_inventory()
+                return True
+        return False
+
+    def check_expired_items(self):
+        today = datetime.date.today()
+        expired_items = [item for item in self.inventory if item['expiration_date'] < today]
+        return expired_items
+
+    def list_inventory(self):
+        return self.inventory
+
+
+def main():
+    # Create an instance of InventoryManagement
+    inventory_manager = InventoryManagement('inventory.csv')
+
+    # Add test items to inventory
+    inventory_manager.add_item('001', 'Apple', 100, '2023-05-12')
+    inventory_manager.add_item('002', 'Banana', 150, '2023-06-10')
+
+    # List the current inventory
+    current_inventory = inventory_manager.list_inventory()
+    print("Current Inventory:", current_inventory)
+
+    # Check for expired items
+    expired_items = inventory_manager.check_expired_items()
+    print("Expired Items:", expired_items)
+
+    # Remove some items from inventory
+    inventory_manager.remove_item('001', 20)
+
+
 if __name__ == "__main__":
-    check_inventory_and_create_orders(inventory_file, order_file, restock_threshold, restock_level)
+    main()
