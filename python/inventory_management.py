@@ -1,81 +1,71 @@
 #!/usr/bin/env python3
-
-import csv
 import datetime
+from collections import defaultdict
 
+# Define a class to manage inventory items
+class InventoryItem:
+    def __init__(self, name, quantity, expiration_date=None):
+        self.name = name
+        self.quantity = quantity
+        self.expiration_date = expiration_date if expiration_date else None
 
-class InventoryManagement:
-    def __init__(self, inventory_file):
-        self.inventory_file = inventory_file
-        self.inventory = self.load_inventory()
+    def __str__(self):
+        return f"{self.name}, Quantity: {self.quantity}, Expiration: {self.expiration_date}"
+    
+# Define the inventory management class
+class Inventory:
+    def __init__(self):
+        self.items = defaultdict(list)
 
-    def load_inventory(self):
-        inventory = []
-        try:
-            with open(self.inventory_file, mode='r') as file:
-                csv_reader = csv.DictReader(file)
-                for row in csv_reader:
-                    row['expiration_date'] = datetime.datetime.strptime(row['expiration_date'], '%Y-%m-%d').date()
-                    inventory.append(row)
-        except FileNotFoundError:
-            print("Inventory file not found.")
-        return inventory
+    def add_item(self, item):
+        self.items[item.name].append(item)
 
-    def save_inventory(self):
-        fields = ['item_id', 'item_name', 'quantity', 'expiration_date']
-        with open(self.inventory_file, mode='w') as file:
-            csv_writer = csv.DictWriter(file, fieldnames=fields)
-            csv_writer.writeheader()
-            for item in self.inventory:
-                item['expiration_date'] = item['expiration_date'].strftime('%Y-%m-%d')
-                csv_writer.writerow(item)
-
-    def add_item(self, item_id, item_name, quantity, expiration_date):
-        new_item = {
-            'item_id': item_id,
-            'item_name': item_name,
-            'quantity': quantity,
-            'expiration_date': datetime.datetime.strptime(expiration_date, '%Y-%m-%d').date()
-        }
-        self.inventory.append(new_item)
-        self.save_inventory()
-
-    def remove_item(self, item_id, quantity):
-        for item in self.inventory:
-            if item['item_id'] == item_id and int(item['quantity']) >= quantity:
-                item['quantity'] = int(item['quantity']) - quantity
-                self.save_inventory()
-                return True
+    def remove_item(self, name, quantity):
+        if name in self.items:
+            items_to_remove = []
+            for item in self.items[name]:
+                if item.quantity <= quantity:
+                    quantity -= item.quantity
+                    items_to_remove.append(item)
+                else:
+                    item.quantity -= quantity
+                    quantity = 0
+                if quantity == 0:
+                    break
+            for item in items_to_remove:
+                self.items[name].remove(item)
+            if not self.items[name]:
+                del self.items[name]
+            return True
         return False
 
-    def check_expired_items(self):
+    def check_expired(self):
         today = datetime.date.today()
-        expired_items = [item for item in self.inventory if item['expiration_date'] < today]
-        return expired_items
+        for name, items in list(self.items.items()):
+            self.items[name] = [
+                item for item in items if not item.expiration_date or item.expiration_date >= today
+            ]
+            if not self.items[name]:
+                del self.items[name]
 
     def list_inventory(self):
-        return self.inventory
+        for name, items in self.items.items():
+            print(f"Inventory for {name}:")
+            for item in items:
+                print(f" - {item}")
 
-
-def main():
-    # Create an instance of InventoryManagement
-    inventory_manager = InventoryManagement('inventory.csv')
-
-    # Add test items to inventory
-    inventory_manager.add_item('001', 'Apple', 100, '2023-05-12')
-    inventory_manager.add_item('002', 'Banana', 150, '2023-06-10')
-
-    # List the current inventory
-    current_inventory = inventory_manager.list_inventory()
-    print("Current Inventory:", current_inventory)
-
-    # Check for expired items
-    expired_items = inventory_manager.check_expired_items()
-    print("Expired Items:", expired_items)
-
-    # Remove some items from inventory
-    inventory_manager.remove_item('001', 20)
-
-
+# Example usage
 if __name__ == "__main__":
-    main()
+    inventory = Inventory()
+
+    inventory.add_item(InventoryItem("Milk", 10, datetime.date(2023, 5, 1)))
+    inventory.add_item(InventoryItem("Bread", 20, datetime.date(2023, 4, 15)))
+    
+    # Check and remove expired items
+    inventory.check_expired()
+
+    # Remove some items
+    inventory.remove_item("Milk", 5)
+    
+    # List current inventory
+    inventory.list_inventory()
