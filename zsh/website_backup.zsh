@@ -1,23 +1,16 @@
 #!/bin/zsh
 
 # Variables
-backup_dir="/path/to/backup/dir"
-website_dir="/path/to/website/dir"
-timestamp=$(date +"%Y%m%d%H%M%S")
-archive_name="website_backup_$timestamp.tar.gz"
-temp_backup_file="website_temp_backup_$timestamp"
+website_directory="/path/to/your/website" # replace with the path to your website
+backup_directory="/path/to/backup/directory" # replace with where you want your backups to go
+date_format="$(date +%Y%m%d_%H%M%S)"
+backup_filename="website_backup_${date_format}.tar.gz"
 
-# Create backup directory if it doesn't exist
-mkdir -p $backup_dir
+# Ensure the backup directory exists
+mkdir -p $backup_directory
 
-# Create a temporary backup file with a list of files to be archived
-find $website_dir -type f > $temp_backup_file
+# Backup and compress the website directory
+tar -czf $backup_directory/$backup_filename -C $website_directory .
 
-# Archive and compress the website files listed in the temporary backup file
-tar -czf $backup_dir/$archive_name -T $temp_backup_file
-
-# Remove temporary backup file
-rm $temp_backup_file
-
-# Printing the backup file path
-echo "Backup archived as $backup_dir/$archive_name"
+# If you want to delete backups older than 30 days, uncomment the following line
+# find $backup_directory -type f -name 'website_backup_*.tar.gz' -mtime +30 -delete
