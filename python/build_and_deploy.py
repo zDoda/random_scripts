@@ -1,60 +1,33 @@
 #!/usr/bin/env python3
 import subprocess
-import shutil
 import os
 
-# Configuration
-repo_url = 'https://github.com/your-repo/your-project.git'
-clone_folder = 'repo'
-build_script = './build.sh'
-deploy_script = './deploy.sh'
-branch_to_deploy = 'main'
+# Define build and deploy functions
+def build():
+    print("Starting build process...")
+    # Add your build commands here, for example:
+    # subprocess.run(["npm", "install"], check=True)
+    # subprocess.run(["npm", "run", "build"], check=True)
+    print("Build process completed.")
 
-
-def clone_repo(url, branch, destination_folder):
-    subprocess.run(['git', 'clone', '-b', branch, url, destination_folder], check=True)
-
-
-def pull_latest_code(repo_folder, branch):
-    subprocess.run(['git', 'checkout', branch], cwd=repo_folder, check=True)
-    subprocess.run(['git', 'pull', 'origin', branch], cwd=repo_folder, check=True)
-
-
-def run_script(script_path):
-    subprocess.run([script_path], check=True)
-
-
-def clean_up(folder):
-    if os.path.isdir(folder):
-        shutil.rmtree(folder)
-
+def deploy():
+    print("Starting deployment process...")
+    # Add your deployment commands here, for example:
+    # subprocess.run(["scp", "-r", "build/", "user@server:/path/to/deploy"], check=True)
+    print("Deployment process completed.")
 
 def main():
-    # Cleanup the old repo folder if exists
-    clean_up(clone_folder)
+    try:
+        # First, we build the project
+        build()
+        
+        # Then, if build succeeds, we deploy the project
+        deploy()
+    
+    except subprocess.CalledProcessError as e:
+        print(f"An error occurred: {e}")
+    except Exception as e:
+        print(f"An unexpected error occurred: {e}")
 
-    # Clone the repository
-    print(f"Cloning the repository from {repo_url}...")
-    clone_repo(repo_url, branch_to_deploy, clone_folder)
-
-    # Pull the latest code
-    print(f"Pulling the latest code from the {branch_to_deploy} branch...")
-    pull_latest_code(clone_folder, branch_to_deploy)
-
-    # Running build script
-    print("Running build script...")
-    run_script(os.path.join(clone_folder, build_script))
-
-    # Running deployment script
-    print("Running deployment script...")
-    run_script(os.path.join(clone_folder, deploy_script))
-
-    # Clean up cloned repo
-    print("Cleaning up...")
-    clean_up(clone_folder)
-
-    print("Build and deployment processes are completed!")
-
-
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()
