@@ -1,71 +1,96 @@
 #!/usr/bin/env python3
-import datetime
-from collections import defaultdict
+import csv
+import os
 
-# Define a class to manage inventory items
-class InventoryItem:
-    def __init__(self, name, quantity, expiration_date=None):
-        self.name = name
-        self.quantity = quantity
-        self.expiration_date = expiration_date if expiration_date else None
+# Define the inventory file path
+INVENTORY_FILE = 'inventory.csv'
 
-    def __str__(self):
-        return f"{self.name}, Quantity: {self.quantity}, Expiration: {self.expiration_date}"
+# Inventory fields: Part ID, Part Name, Material, Quantity
+INVENTORY_FIELDS = ['Part ID', 'Part Name', 'Material', 'Quantity']
+
+# Check if inventory file exists, if not, create it
+if not os.path.exists(INVENTORY_FILE):
+    with open(INVENTORY_FILE, 'w', newline='') as file:
+        writer = csv.DictWriter(file, fieldnames=INVENTORY_FIELDS)
+        writer.writeheader()
+
+
+def add_part(part_id, part_name, material, quantity):
+    with open(INVENTORY_FILE, 'a', newline='') as file:
+        writer = csv.DictWriter(file, fieldnames=INVENTORY_FIELDS)
+        writer.writerow({'Part ID': part_id, 'Part Name': part_name, 'Material': material, 'Quantity': quantity})
+
+
+def update_part(part_id, quantity):
+    parts = []
+    with open(INVENTORY_FILE, 'r') as file:
+        reader = csv.DictReader(file)
+        for row in reader:
+            if row['Part ID'] == part_id:
+                row['Quantity'] = str(int(row['Quantity']) + int(quantity))
+            parts.append(row)
+
+    with open(INVENTORY_FILE, 'w', newline='') as file:
+        writer = csv.DictWriter(file, fieldnames=INVENTORY_FIELDS)
+        writer.writeheader()
+        writer.writerows(parts)
+
+
+def delete_part(part_id):
+    parts = []
+    with open(INVENTORY_FILE, 'r') as file:
+        reader = csv.DictReader(file)
+        for row in reader:
+            if row['Part ID'] != part_id:
+                parts.append(row)
+
+    with open(INVENTORY_FILE, 'w', newline='') as file:
+        writer = csv.DictWriter(file, fieldnames=INVENTORY_FIELDS)
+        writer.writeheader()
+        writer.writerows(parts)
+
+
+def view_inventory():
+    with open(INVENTORY_FILE, 'r') as file:
+        reader = csv.DictReader(file)
+        for row in reader:
+            print(row)
+
+
+# Example operations
+if __name__ == '__main__':
+    print("Inventory Management System")
+    print("[A]dd a part")
+    print("[U]pdate part quantity")
+    print("[D]elete a part")
+    print("[V]iew inventory")
+    print("[Q]uit")
     
-# Define the inventory management class
-class Inventory:
-    def __init__(self):
-        self.items = defaultdict(list)
-
-    def add_item(self, item):
-        self.items[item.name].append(item)
-
-    def remove_item(self, name, quantity):
-        if name in self.items:
-            items_to_remove = []
-            for item in self.items[name]:
-                if item.quantity <= quantity:
-                    quantity -= item.quantity
-                    items_to_remove.append(item)
-                else:
-                    item.quantity -= quantity
-                    quantity = 0
-                if quantity == 0:
-                    break
-            for item in items_to_remove:
-                self.items[name].remove(item)
-            if not self.items[name]:
-                del self.items[name]
-            return True
-        return False
-
-    def check_expired(self):
-        today = datetime.date.today()
-        for name, items in list(self.items.items()):
-            self.items[name] = [
-                item for item in items if not item.expiration_date or item.expiration_date >= today
-            ]
-            if not self.items[name]:
-                del self.items[name]
-
-    def list_inventory(self):
-        for name, items in self.items.items():
-            print(f"Inventory for {name}:")
-            for item in items:
-                print(f" - {item}")
-
-# Example usage
-if __name__ == "__main__":
-    inventory = Inventory()
-
-    inventory.add_item(InventoryItem("Milk", 10, datetime.date(2023, 5, 1)))
-    inventory.add_item(InventoryItem("Bread", 20, datetime.date(2023, 4, 15)))
-    
-    # Check and remove expired items
-    inventory.check_expired()
-
-    # Remove some items
-    inventory.remove_item("Milk", 5)
-    
-    # List current inventory
-    inventory.list_inventory()
+    while True:
+        choice = input("Enter your choice: ").upper()
+        if choice == 'A':
+            part_id = input("Enter part ID: ")
+            part_name = input("Enter part name: ")
+            material = input("Enter material: ")
+            quantity = input("Enter quantity: ")
+            
+            add_part(part_id, part_name, material, quantity)
+        
+        elif choice == 'U':
+            part_id = input("Enter part ID to update: ")
+            quantity = input("Enter quantity to add or subtract (use - for subtracting): ")
+            
+            update_part(part_id, quantity)
+        
+        elif choice == 'D':
+            part_id = input("Enter part ID to delete: ")
+            
+            delete_part(part_id)
+        
+        elif choice == 'V':
+            view_inventory()
+        
+        elif choice == 'Q':
+            break
+        else:
+            print("Invalid choice. Please try again.")
