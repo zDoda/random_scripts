@@ -2,52 +2,46 @@
 
 import pandas as pd
 import matplotlib.pyplot as plt
+from sklearn.metrics import roc_curve, auc
 
-# Path to your marketing campaign data file (CSV)
-# The CSV should have columns like campaign_name, clicks, impressions, cost, conversions
-data_file_path = 'marketing_campaign_data.csv'
+# Sample data file path
+data_file = 'campaign_data.csv'
 
-# Load data using pandas
-campaign_data = pd.read_csv(data_file_path)
+# Read dataset
+df = pd.read_csv(data_file)
 
-# Calculate Key Performance Indicators (KPIs)
-campaign_data['CTR'] = campaign_data['clicks'] / campaign_data['impressions']  # Click-Through Rate
-campaign_data['CPC'] = campaign_data['cost'] / campaign_data['clicks']  # Cost Per Click
-campaign_data['CPA'] = campaign_data['cost'] / campaign_data['conversions']  # Cost Per Acquisition
-campaign_data['ROAS'] = campaign_data['revenue'] / campaign_data['cost']  # Return on Advertising Spend
-campaign_data['ConversionRate'] = campaign_data['conversions'] / campaign_data['clicks']  # Conversion Rate
+# Print basic statistics
+print(df.describe())
+print(df.head())
 
-# Print summary stats
-print("Summary statistics for campaigns:")
-print(campaign_data.describe())
+# Assume 'response' column records if the target customer responded to the campaign
+# and 'campaign_cost' column records the cost of the campaign for each instance
+response_rate = df['response'].mean()
+campaign_cost = df['campaign_cost'].sum()
+print(f"Response rate: {response_rate:.2%}")
+print(f"Total campaign cost: {campaign_cost}")
 
-# Analysis of Campaign Effectiveness
-# Sorting data based on effectiveness (e.g., by CPA or ROAS)
-campaign_sorted_by_cpa = campaign_data.sort_values(by='CPA', ascending=True)
-campaign_sorted_by_roas = campaign_data.sort_values(by='ROAS', ascending=False)
+# Calculate cost per acquisition
+acquisition = df[df['response'] == 1]
+cost_per_acquisition = campaign_cost / len(acquisition)
+print(f"Cost per acquisition: {cost_per_acquisition:.2f}")
 
-# Plotting data for visual analysis
-plt.figure(figsize=(10, 6))
+# Create a ROC curve
+# Assuming there's a probability score 'score' for predicting the 'response'
+fpr, tpr, thresholds = roc_curve(df['response'], df['score'])
+roc_auc = auc(fpr, tpr)
 
-# Plotting CPA
-plt.subplot(1, 2, 1)
-plt.bar(campaign_sorted_by_cpa['campaign_name'], campaign_sorted_by_cpa['CPA'], color='blue')
-plt.xlabel('Campaign')
-plt.ylabel('CPA')
-plt.title('Campaign Cost Per Acquisition')
-plt.xticks(rotation=90)
-
-# Plotting ROAS
-plt.subplot(1, 2, 2)
-plt.bar(campaign_sorted_by_roas['campaign_name'], campaign_sorted_by_roas['ROAS'], color='green')
-plt.xlabel('Campaign')
-plt.ylabel('ROAS')
-plt.title('Return on Advertising Spend')
-plt.xticks(rotation=90)
-
-plt.tight_layout()
+# Plot a ROC curve
+plt.figure()
+plt.plot(fpr, tpr, color='darkorange', lw=2, label=f'ROC curve (area = {roc_auc:.2f})')
+plt.plot([0, 1], [0, 1], color='navy', lw=2, linestyle='--')
+plt.xlim([0.0, 1.0])
+plt.ylim([0.0, 1.05])
+plt.xlabel('False Positive Rate')
+plt.ylabel('True Positive Rate')
+plt.title('Receiver Operating Characteristic')
+plt.legend(loc="lower right")
 plt.show()
 
-# Save processed data to a new CSV
-processed_file_path = 'processed_marketing_campaign_data.csv'
-campaign_data.to_csv(processed_file_path, index=False)
+# Save ROC curve
+plt.savefig("roc_curve.png")
