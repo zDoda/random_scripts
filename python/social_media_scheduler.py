@@ -2,49 +2,43 @@
 
 import schedule
 import time
-import random
-from datetime import datetime, timedelta
-from social_media_api_client import SocialMediaApiClient  # Replace with actual API client for your social media
+from datetime import datetime
+import tweepy
 
-# Configuration for social media posts
-# Please replace 'your_access_token' and 'social_media_api_client' with actual values
-ACCESS_TOKEN = 'your_access_token'
-social_media_client = SocialMediaApiClient(ACCESS_TOKEN)
+# social media credentials (placeholder values, replace with your own)
+TWITTER_CONSUMER_KEY = 'your_twitter_consumer_key'
+TWITTER_CONSUMER_SECRET = 'your_twitter_consumer_secret'
+TWITTER_ACCESS_TOKEN = 'your_twitter_access_token'
+TWITTER_ACCESS_TOKEN_SECRET = 'your_twitter_access_token_secret'
 
-def post_to_social_media(message, image_path=None):
-    """Posts the message to social media, optionally with an image."""
+# Authenticate to Twitter
+auth = tweepy.OAuthHandler(TWITTER_CONSUMER_KEY, TWITTER_CONSUMER_SECRET)
+auth.set_access_token(TWITTER_ACCESS_TOKEN, TWITTER_ACCESS_TOKEN_SECRET)
+
+# Create API object
+api = tweepy.API(auth)
+
+# Function to post to Twitter
+def post_to_twitter(text):
     try:
-        if image_path:
-            social_media_client.post_image_with_message(image_path=image_path, message=message)
-        else:
-            social_media_client.post_message(message)
-        print(f"Posted to social media at {datetime.now()}: {message}")
+        print(f"Posting to Twitter at {datetime.now()}")
+        api.update_status(text)
+        print("Posted successfully!")
     except Exception as e:
-        print(f"Failed to post to social media: {e}")
+        print(f"An error occurred: {e}")
 
-def schedule_posts():
-    """Schedules a series of posts from the provided list."""
-    posts = [
-        {"message": "Good morning, world!", "image": None, "time": "07:00"},
-        {"message": "Here's your daily dose of inspiration!", "image": "inspiration.jpg", "time": "12:00"},
-        {"message": "Good night, sweet dreams everyone!", "image": None, "time": "21:00"},
-        # Add more posts as needed
-    ]
+# Your posts data
+posts = [
+    {"time": "09:00", "text": "Good morning! #morningvibes"},
+    {"time": "12:00", "text": "Check out our new product! #innovation"},
+    {"time": "18:00", "text": "Thanks for following us today. #gratitude"}
+]
 
-    for post in posts:
-        schedule_time = datetime.strptime(post['time'], "%H:%M").time()
-        schedule_message = random.choice([post['message'], post['message'].upper(), post['message'].capitalize()])
-        if post['image']:
-            schedule.every().day.at(post['time']).do(post_to_social_media, schedule_message, post['image'])
-        else:
-            schedule.every().day.at(post['time']).do(post_to_social_media, schedule_message)
+# Schedule the posts
+for post in posts:
+    schedule.every().day.at(post["time"]).do(post_to_twitter, post["text"])
 
-def run_continuously(interval=1):
-    """Continuously run, while executing pending jobs at each elapsed time interval."""
-    while True:
-        schedule.run_pending()
-        time.sleep(interval)
-
-if __name__ == '__main__':
-    schedule_posts()
-    run_continuously()
+# Keeps the script running to execute the scheduled tasks
+while True:
+    schedule.run_pending()
+    time.sleep(1)
