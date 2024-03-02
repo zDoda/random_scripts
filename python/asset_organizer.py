@@ -1,56 +1,43 @@
 #!/usr/bin/env python3
+
 import os
 import shutil
 
-# Define the mapping of extensions to directory names
-EXTENSION_CATEGORIES = {
-    '.jpg': 'Images',
-    '.jpeg': 'Images',
-    '.png': 'Images',
-    '.gif': 'Images',
-    '.bmp': 'Images',
-    '.svg': 'Images',
-    '.txt': 'Documents',
-    '.doc': 'Documents',
-    '.docx': 'Documents',
-    '.pdf': 'Documents',
-    '.xls': 'Documents',
-    '.xlsx': 'Documents',
-    '.csv': 'Documents',
-    '.ppt': 'Presentations',
-    '.pptx': 'Presentations',
-    '.mp3': 'Audio',
-    '.wav': 'Audio',
-    '.ogg': 'Audio',
-    '.mp4': 'Videos',
-    '.mov': 'Videos',
-    '.avi': 'Videos',
-    '.mkv': 'Videos'
+# Define the paths and categories
+source_path = '/path/to/source/assets'
+destination_path = '/path/to/organized/assets'
+
+# You can customize these categories and file types according to your requirements
+categories = {
+    'Images': ['.jpg', '.jpeg', '.png', '.gif', '.tiff', '.bmp', '.svg'],
+    'Videos': ['.mp4', '.mov', '.avi', '.mkv', '.flv', '.wmv'],
+    'Documents': ['.pdf', '.doc', '.docx', '.xls', '.xlsx', '.ppt', '.pptx', '.txt'],
+    'Audio': ['.mp3', '.wav', '.aac', '.ogg', '.flac'],
+    'Archives': ['.zip', '.rar', '.tar', '.gz', '.7z']
 }
 
-def organize_assets(source_directory):
-    # Ensure source_directory exists
-    if not os.path.exists(source_directory):
-        print(f"Error: The source directory {source_directory} does not exist.")
-        return
-
-    # Iterate over all files in the source directory
-    for filename in os.listdir(source_directory):
-        # Extract the file extension
-        _, extension = os.path.splitext(filename)
-
-        # Check if the file extension is in our mapping
-        if extension.lower() in EXTENSION_CATEGORIES:
-            # Determine the subdirectory name based on the file extension
-            subdirectory_name = EXTENSION_CATEGORIES[extension.lower()]
+# Function to organize assets
+def organize_assets(source, destination, file_categories):
+    if not os.path.exists(destination):
+        os.makedirs(destination)
+    
+    # Loop through all files in source directory
+    for filename in os.listdir(source):
+        if os.path.isfile(os.path.join(source, filename)):
+            file_extension = os.path.splitext(filename)[1].lower()
             
-            # Create the subdirectory if it doesn't exist
-            subdirectory_path = os.path.join(source_directory, subdirectory_name)
-            if not os.path.exists(subdirectory_path):
-                os.makedirs(subdirectory_path)
-            
-            # Move the file to the categorized subdirectory
-            shutil.move(os.path.join(source_directory, filename), os.path.join(subdirectory_path, filename))
+            # Find the category for each file type
+            for category, extensions in file_categories.items():
+                if file_extension in extensions:
+                    category_path = os.path.join(destination, category)
+                    
+                    # Create a directory for the category if it doesn't exist
+                    if not os.path.exists(category_path):
+                        os.makedirs(category_path)
+                    
+                    # Move the file to the category directory
+                    shutil.move(os.path.join(source, filename), os.path.join(category_path, filename))
+                    break
 
-# Example usage
-organize_assets('/path/to/your/assets')
+# Call the function to organize assets
+organize_assets(source_path, destination_path, categories)
