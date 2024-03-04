@@ -1,35 +1,42 @@
 #!/usr/bin/env python3
 import pandas as pd
-from openpyxl import load_workbook
-import datetime
+import matplotlib.pyplot as plt
+from pandas_datareader import data as web
+import datetime as dt
 
-def generate_financial_report(financial_data_csv, template_xlsx, output_xlsx):
-    # Load financial data from CSV file
-    financial_data = pd.read_csv(financial_data_csv)
+# Define time frame for the report
+start_date = dt.datetime.now() - dt.timedelta(days=365)
+end_date = dt.datetime.now()
 
-    # Calculate summary metrics
-    total_revenue = financial_data['Revenue'].sum()
-    total_expense = financial_data['Expenses'].sum()
-    net_income = total_revenue - total_expense
+# Financial data to fetch (e.g., stock symbols)
+tickers = ['AAPL', 'MSFT', 'GOOGL', 'AMZN']
 
-    # Load Excel report template
-    workbook = load_workbook(template_xlsx)
-    sheet = workbook.active
+# Create an empty DataFrame to store fetched financial data
+financial_data = pd.DataFrame()
 
-    # Write calculated metrics to the report
-    sheet['B2'] = datetime.date.today().strftime('%Y-%m-%d')  # Report Date
-    sheet['B3'] = total_revenue  # Total Revenue
-    sheet['B4'] = total_expense  # Total Expenses
-    sheet['B5'] = net_income  # Net Income
+# Fetch financial data
+for ticker in tickers:
+    financial_data[ticker] = web.DataReader(ticker, data_source='yahoo', start=start_date, end=end_date)['Close']
 
-    # Save the report to a new file
-    workbook.save(output_xlsx)
+# Generate descriptive statistics report
+stats_report = financial_data.describe()
 
-    print(f"Report generated: {output_xlsx}")
+# Save statistics report to Excel file
+stats_report.to_excel('financial_report_statistics.xlsx')
 
+# Generate and save plots for each stock
+for ticker in tickers:
+    plt.figure(figsize=(10, 5))
+    plt.plot(financial_data.index, financial_data[ticker])
+    plt.title(f'Stock Price of {ticker} Over Time')
+    plt.xlabel('Date')
+    plt.ylabel('Price (USD)')
+    plt.savefig(f'stock_price_{ticker}.png')
 
-# Example Usage
-financial_data_csv = 'financial_data.csv'  # Your financial data CSV file path
-template_xlsx = 'financial_report_template.xlsx'  # Your Excel template file path
-output_xlsx = f'financial_report_{datetime.date.today().strftime("%Y%m%d")}.xlsx'  # Output file path
-generate_financial_report(financial_data_csv, template_xlsx, output_xlsx)
+# Generating a correlation matrix
+correlation_matrix = financial_data.corr()
+correlation_matrix.to_excel('financial_report_correlation.xlsx')
+
+# Example of more advanced financial analysis can be added here (e.g., moving average)
+
+print("Financial report generation complete.")
