@@ -1,24 +1,25 @@
-#!/bin/zsh
+```zsh
+#!/usr/bin/env zsh
 
-# Dependencies: ImageMagick must be installed to use the convert command
+# Batch Image Watermarking Script
+# Requires ImageMagick to be installed
 
-# Configuration
-WATERMARK_IMAGE="/path/to/watermark.png"   # Path to the watermark image
-IMAGE_DIRECTORY="/path/to/images"          # Directory containing images to watermark
-OUTPUT_DIRECTORY="/path/to/output"         # Directory to save watermarked images
-POSITION="southeast"                       # Watermark position: northeast, northwest, southeast, southwest, center, etc.
-PADDING="10x10"                            # Optional offset (e.g. "10x10" will add a 10 pixel offset to x and y)
+WATERMARK_IMAGE="watermark.png"  # Path to the watermark image
+OUTPUT_DIR="watermarked_images"  # Output directory for watermarked images
 
-# Create output directory if it doesn't exist
-mkdir -p $OUTPUT_DIRECTORY
+if [[ ! -f $WATERMARK_IMAGE ]]; then
+    echo "Watermark image does not exist."
+    exit 1
+fi
 
-# Loop through all images in the directory
-for IMAGE in $IMAGE_DIRECTORY/*.{jpg,jpeg,png,gif}; do
-  if [ -f "$IMAGE" ]; then
-    BASENAME=$(basename $IMAGE)
-    # Create the watermarked version
-    convert "$IMAGE" -gravity $POSITION -geometry +$PADDING -composite $WATERMARK_IMAGE "$OUTPUT_DIRECTORY/$BASENAME"
-  fi
+if [[ ! -d $OUTPUT_DIR ]]; then
+    mkdir -p $OUTPUT_DIR
+fi
+
+for img in *.jpg *.jpeg *.png; do
+    if [[ -f $img ]]; then
+        output_file="${OUTPUT_DIR}/${img}"
+        composite -gravity southeast -geometry +10+10 "$WATERMARK_IMAGE" "$img" "$output_file"
+        echo "Watermarked image saved as $output_file"
+    fi
 done
-
-echo "Watermarking complete. Check output in $OUTPUT_DIRECTORY"
