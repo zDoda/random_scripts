@@ -1,49 +1,46 @@
 #!/usr/bin/env python3
-
 import os
-from PIL import Image, ImageDraw, ImageFont
+from PIL import Image
 
-def add_watermark(input_image_path, output_image_path, watermark_text, position, opacity=255, font_size=30):
-    # Open the original image
-    base_image = Image.open(input_image_path).convert("RGBA")
+def add_watermark(input_image_path, output_image_path, watermark_image_path, position):
+    base_image = Image.open(input_image_path)
+    watermark = Image.open(watermark_image_path)
+    # Assuming the watermark is transparent and its size is appropriate for the base image
+    # You may need to resize or modify the watermark image to better fit your use case
     
-    # Make a blank image for the watermark with an alpha layer (RGBA)
-    txt = Image.new('RGBA', base_image.size, (255,255,255,0))
-    
-    # Choose a font and size for the watermark
-    font = ImageFont.truetype("arial.ttf", font_size)
-    
-    # Get drawing context from the blank watermark image
-    d = ImageDraw.Draw(txt)
-    
-    # Identify the size of the drawn text
-    text_size = d.textsize(watermark_text, font=font)
-    
-    # Calculate the position for the watermark
-    if position == "bottom_right":
-        text_position = (base_image.size[0] - text_size[0] - 10, base_image.size[1] - text_size[1] - 10)
-    elif position == "top_right":
-        text_position = (base_image.size[0] - text_size[0] - 10, 10)
-    elif position == "top_left":
-        text_position = (10, 10)
-    elif position == "bottom_left":
-        text_position = (10, base_image.size[1] - text_size[1] - 10)
-    elif position == "center":
-        text_position = ((base_image.size[0] - text_size[0]) / 2, (base_image.size[1] - text_size[1]) / 2)
+    # calculate the position
+    if position == 'bottom-right':
+        x = base_image.width - watermark.width
+        y = base_image.height - watermark.height
+    elif position == 'bottom-left':
+        x = 0
+        y = base_image.height - watermark.height
+    elif position == 'top-right':
+        x = base_image.width - watermark.width
+        y = 0
+    elif position == 'top-left':
+        x = 0
+        y = 0
     else:
-        raise ValueError("Invalid position for watermark. Use 'center', 'top_left', 'top_right', 'bottom_left', or 'bottom_right'.")
+        x = (base_image.width - watermark.width) // 2
+        y = (base_image.height - watermark.height) // 2
 
-    # Add the text to the watermark image
-    d.text(text_position, watermark_text, fill=(255,255,255,opacity), font=font)
+    # Applying the watermark
+    transparent = Image.new('RGBA', base_image.size)
+    transparent.paste(base_image, (0, 0))
+    transparent.paste(watermark, (x, y), mask=watermark)
     
-    # Combine the watermark image with the base image
-    watermarked = Image.alpha_composite(base_image, txt)
+    # If base image is not 'RGBA', convert it back to the original mode
+    if base_image.mode != 'RGBA':
+        transparent = transparent.convert(base_image.mode)
     
-    # Convert to RGB and save final image
-    watermarked.convert('RGB').save(output_image_path, "JPEG")
+    # Save watermarked image
+    transparent.save(output_image_path)
 
-# Example usage: Add a watermark to an image
-input_image = 'path/to/input/image.jpg'
-output_image = 'path/to/output/image_with_watermark.jpg'
-watermark = 'Watermark Text Here'
-add_watermark(input_image, output_image, watermark, 'bottom_right', opacity=128, font_size=50)
+if __name__ == "__main__":
+    # Example usage
+    input_path = "input.jpg"
+    output_path = "watermarked.jpg"
+    watermark_path = "watermark.png"
+    watermark_position = "bottom-right"  # Options: 'center', 'top-left', 'top-right', 'bottom-left', 'bottom-right'
+    add_watermark(input_path, output_path, watermark_path, watermark_position)
