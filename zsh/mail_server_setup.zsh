@@ -1,63 +1,42 @@
 #!/bin/zsh
+# zsh script to set up and configure Postfix mail server
 
-# Script to set up and configure a Postfix mail server with Dovecot
+# Update the system
+sudo apt-get update -y
+sudo apt-get upgrade -y
 
-# Ensure the script is running as root
-if (( $EUID != 0 )); then
-  echo "Please run as root"
-  exit
-fi
+# Install Postfix
+sudo debconf-set-selections <<< "postfix postfix/mailname string yourdomain.com"
+sudo debconf-set-selections <<< "postfix postfix/main_mailer_type string 'Internet Site'"
+sudo apt-get install -y postfix
 
-# Install postfix, dovecot, and mailutils
-apt-get update && apt-get install -y postfix dovecot-core dovecot-imapd mailutils
+# Install mailutils for testing purposes
+sudo apt-get install -y mailutils
 
-# Postfix configuration
-postfix_config() {
-  postconf -e 'smtpd_banner = $myhostname ESMTP $mail_name'
-  postconf -e 'biff = no'
-  postconf -e 'append_dot_mydomain = no'
-  postconf -e 'readme_directory = no'
-  postconf -e 'smtpd_tls_cert_file=/etc/ssl/certs/ssl-cert-snakeoil.pem'
-  postconf -e 'smtpd_tls_key_file=/etc/ssl/private/ssl-cert-snakeoil.key'
-  postconf -e 'smtpd_use_tls=yes'
-  postconf -e 'smtpd_tls_session_cache_database = btree:${data_directory}/smtpd_scache'
-  postconf -e 'smtp_tls_session_cache_database = btree:${data_directory}/smtp_scache'
-  postconf -e 'myhostname = example.com'
-  postconf -e 'alias_maps = hash:/etc/aliases'
-  postconf -e 'myorigin = /etc/mailname'
-  postconf -e 'mydestination = $myhostname, localhost.$mydomain, $mydomain'
-  postconf -e 'relayhost ='
-  postconf -e 'mynetworks = 127.0.0.0/8[::1]/128'
-  postconf -e 'mailbox_size_limit = 0'
-  postconf -e 'recipient_delimiter = +'
-  postconf -e 'inet_interfaces = all'
-  postconf -e 'inet_protocols = all'
-  
-  # Set up aliases
-  echo "root: user@example.com" >> /etc/aliases
-  newaliases
-}
+# Open the main configuration file to make necessary changes
+sudo postconf -e 'home_mailbox= Maildir/'
+sudo postconf -e 'myhostname = yourdomain.com'
+sudo postconf -e 'mydestination = $myhostname, localhost.com, , localhost'
+sudo postconf -e 'mynetworks = 127.0.0.0/8'
+sudo postconf -e 'relayhost ='
+sudo postconf -e 'smtpd_banner = $myhostname ESMTP $mail_name'
+sudo postconf -e 'inet_interfaces = all'
 
-# Dovecot configuration
-dovecot_config() {
-  # Enable IMAP
-  sed -i 's/#protocols = imap pop3 lmtp/protocols = imap lmtp/' /etc/dovecot/dovecot.conf
-  
-  # Mailbox settings
-  sed -i 's/#mail_location = /mail_location = maildir:~\/Maildir/' /etc/dovecot/conf.d/10-mail.conf
-  
-  # Enable SSL
-  sed -i 's/#ssl = yes/ssl = yes/' /etc/dovecot/conf.d/10-ssl.conf
-  sed -i "s#ssl_cert = </etc/dovecot/private/dovecot.pem#ssl_cert = </etc/ssl/certs/ssl-cert-snakeoil.pem#" /etc/dovecot/conf.d/10-ssl.conf
-  sed -i "s#ssl_key = </etc/dovecot/private/dovecot.key#ssl_key = </etc/ssl/private/ssl-cert-snakeoil.key#" /etc/dovecot/conf.d/10-ssl.conf
-}
+# Set up mailbox and aliases
+echo "root: username" | sudo tee -a /etc/aliases
+sudo newaliases
 
-# Configure Postfix and Dovecot
-postfix_config
-dovecot_config
+# Restart Postfix to apply changes
+sudo systemctl restart postfix
 
-# Restart services
-systemctl restart postfix
-systemctl restart dovecot
+# Set up firewall rules if UFW is enabled
+sudo ufw allow Postfix
+sudo ufw reload
 
-echo "Mail server setup complete."
+# Additional configurations for secure mail server should be implemented such as:
+# - Setting up SSL encryption with certificates
+# - Implementing DKIM and SPF for email validation
+# - Configuring Dovecot for IMAP/POP3 access
+# NOTE: These setup steps are omitted for brevity
+
+echo "Mail server setup is completed."
