@@ -1,59 +1,48 @@
 #!/usr/bin/env python3
-
 import re
-from datetime import datetime
 
-# Define a simple rule-based categorization
-def categorize_ticket(subject, description):
-    category = "General"
-    if re.search(r"(login|password)", subject, re.IGNORECASE):
-        category = "Authentication"
-    elif re.search(r"(error|crash|failure)", description, re.IGNORECASE):
-        category = "Technical Issue"
-    elif re.search(r"(refund|payment|billing)", subject, re.IGNORECASE):
-        category = "Finance"
+# Define categories and their keywords
+CATEGORIES = {
+    'network': ['outage', 'slow', 'latency'],
+    'hardware': ['broken', 'repair', 'replacement'],
+    'software': ['bug', 'error', 'update', 'crash'],
+    'account': ['password', 'login', 'access', 'authentication'],
+}
+
+# Priority levels
+PRIORITY = {
+    'high': ['urgent', 'severe', 'crash', 'outage', 'broken'],
+    'medium': ['slow', 'error', 'repair', 'password'],
+    'low': ['update', 'login', 'access'],
+}
+
+def categorize_ticket(description):
+    category = 'general'
+    for cat, keywords in CATEGORIES.items():
+        if any(keyword in description.lower() for keyword in keywords):
+            category = cat
+            break
     return category
 
-# Define a simple rule-based prioritization
-def prioritize_ticket(category, creation_date):
-    # Priority levels are High, Medium, Low
-    priority = "Low"
-    high_priority_categories = ["Authentication", "Technical Issue"]
-    high_priority_age_threshold_days = 1
-    age = (datetime.now() - creation_date).days
+def prioritize_ticket(description):
+    for level, keywords in PRIORITY.items():
+        if any(keyword in description.lower() for keyword in keywords):
+            return level
+    return 'low'
 
-    if category in high_priority_categories or age > high_priority_age_threshold_days:
-        priority = "High"
-    elif category == "Finance":
-        priority = "Medium"
-    return priority
+def process_ticket(ticket_description):
+    category = categorize_ticket(ticket_description)
+    priority = prioritize_ticket(ticket_description)
+    return category, priority
 
-# Example usage
-if __name__ == "__main__":
-    # Dummy ticket data
-    tickets = [
-        {
-            "id": 1,
-            "subject": "Can't log in to my account",
-            "description": "Every time I try to log in, it says 'incorrect password'.",
-            "creation_date": datetime.strptime('2023-04-10', '%Y-%m-%d')
-        },
-        {
-            "id": 2,
-            "subject": "Refund for overcharge",
-            "description": "I have been charged twice for my subscription this month.",
-            "creation_date": datetime.strptime('2023-04-08', '%Y-%m-%d')
-        },
-        {
-            "id": 3,
-            "subject": "Feature request",
-            "description": "Could you add more color themes to the application?",
-            "creation_date": datetime.strptime('2023-04-12', '%Y-%m-%d')
-        }
-    ]
+if __name__ == '__main__':
+    # Example ticket description
+    example_ticket = "Customer reports that the system crashes when they try to login."
+    
+    # Process the ticket to get its category and priority
+    ticket_category, ticket_priority = process_ticket(example_ticket)
+    
+    # Output the result (you would replace this with the code to update the ticketing system in a real application)
+    print(f"Ticket Category: {ticket_category}")
+    print(f"Ticket Priority: {ticket_priority}")
 
-    # Process each ticket
-    for ticket in tickets:
-        category = categorize_ticket(ticket['subject'], ticket['description'])
-        priority = prioritize_ticket(category, ticket['creation_date'])
-        print(f"Ticket ID {ticket['id']} is categorized as {category} with {priority} priority.")
