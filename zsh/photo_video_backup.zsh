@@ -1,29 +1,35 @@
 #!/bin/zsh
 
-# This script is designed to back up photos and videos from a specified
-# source directory to a destination backup directory.
+# Set the source and destination directories for photos and videos
+photo_source_dir="/path/to/photos/"
+video_source_dir="/path/to/videos/"
+backup_dir="/path/to/backup/"
 
-# Please change SOURCE_DIR and BACKUP_DIR to the paths of your source
-# and backup directories.
+# Create backup directories if they don't exist
+mkdir -p "${backup_dir}photos"
+mkdir -p "${backup_dir}videos"
 
-SOURCE_DIR="/path/to/source/folder"
-BACKUP_DIR="/path/to/backup/folder"
-PHOTO_EXTENSIONS="(jpg|jpeg|png|gif)"
-VIDEO_EXTENSIONS="(mov|mp4|avi|m4v)"
-
-# Function to perform backup of photos and videos
-backup_media() {
-    # Create backup directory if it doesn't exist
-    mkdir -p "$BACKUP_DIR"
-
-    # Find and copy photos
-    find "$SOURCE_DIR" -type f -iregex ".*\.$PHOTO_EXTENSIONS" -exec cp {} "$BACKUP_DIR" \; 
-
-    # Find and copy videos
-    find "$SOURCE_DIR" -type f -iregex ".*\.$VIDEO_EXTENSIONS" -exec cp {} "$BACKUP_DIR" \;
-    
-    echo "Backup of photos and videos completed."
+# Function to backup photos
+backup_photos() {
+  echo "Starting photo backup..."
+  rsync -av --progress "${photo_source_dir}" "${backup_dir}photos"
+  echo "Photo backup completed."
 }
 
-# Start the backup process
-backup_media
+# Function to backup videos
+backup_videos() {
+  echo "Starting video backup..."
+  rsync -av --progress "${video_source_dir}" "${backup_dir}videos"
+  echo "Video backup completed."
+}
+
+# Perform the backup
+backup_photos
+backup_videos
+
+# Unset variables to avoid conflict if script is sourced
+unset photo_source_dir
+unset video_source_dir
+unset backup_dir
+unset -f backup_photos
+unset -f backup_videos
