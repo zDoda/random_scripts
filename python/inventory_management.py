@@ -1,96 +1,60 @@
 #!/usr/bin/env python3
 import csv
-import os
+from pathlib import Path
 
-# Define the inventory file path
-INVENTORY_FILE = 'inventory.csv'
+class InventoryManagement:
+    def __init__(self, inventory_file):
+        self.inventory_file = inventory_file
+        self.inventory = self.load_inventory()
 
-# Inventory fields: Part ID, Part Name, Material, Quantity
-INVENTORY_FIELDS = ['Part ID', 'Part Name', 'Material', 'Quantity']
+    def load_inventory(self):
+        if not Path(self.inventory_file).exists():
+            return {}
+        with open(self.inventory_file, mode='r', newline='') as file:
+            reader = csv.DictReader(file)
+            inventory = {row['PartNumber']: {'Description': row['Description'], 'Quantity': int(row['Quantity'])} for row in reader}
+        return inventory
 
-# Check if inventory file exists, if not, create it
-if not os.path.exists(INVENTORY_FILE):
-    with open(INVENTORY_FILE, 'w', newline='') as file:
-        writer = csv.DictWriter(file, fieldnames=INVENTORY_FIELDS)
-        writer.writeheader()
-
-
-def add_part(part_id, part_name, material, quantity):
-    with open(INVENTORY_FILE, 'a', newline='') as file:
-        writer = csv.DictWriter(file, fieldnames=INVENTORY_FIELDS)
-        writer.writerow({'Part ID': part_id, 'Part Name': part_name, 'Material': material, 'Quantity': quantity})
-
-
-def update_part(part_id, quantity):
-    parts = []
-    with open(INVENTORY_FILE, 'r') as file:
-        reader = csv.DictReader(file)
-        for row in reader:
-            if row['Part ID'] == part_id:
-                row['Quantity'] = str(int(row['Quantity']) + int(quantity))
-            parts.append(row)
-
-    with open(INVENTORY_FILE, 'w', newline='') as file:
-        writer = csv.DictWriter(file, fieldnames=INVENTORY_FIELDS)
-        writer.writeheader()
-        writer.writerows(parts)
-
-
-def delete_part(part_id):
-    parts = []
-    with open(INVENTORY_FILE, 'r') as file:
-        reader = csv.DictReader(file)
-        for row in reader:
-            if row['Part ID'] != part_id:
-                parts.append(row)
-
-    with open(INVENTORY_FILE, 'w', newline='') as file:
-        writer = csv.DictWriter(file, fieldnames=INVENTORY_FIELDS)
-        writer.writeheader()
-        writer.writerows(parts)
-
-
-def view_inventory():
-    with open(INVENTORY_FILE, 'r') as file:
-        reader = csv.DictReader(file)
-        for row in reader:
-            print(row)
-
-
-# Example operations
-if __name__ == '__main__':
-    print("Inventory Management System")
-    print("[A]dd a part")
-    print("[U]pdate part quantity")
-    print("[D]elete a part")
-    print("[V]iew inventory")
-    print("[Q]uit")
-    
-    while True:
-        choice = input("Enter your choice: ").upper()
-        if choice == 'A':
-            part_id = input("Enter part ID: ")
-            part_name = input("Enter part name: ")
-            material = input("Enter material: ")
-            quantity = input("Enter quantity: ")
-            
-            add_part(part_id, part_name, material, quantity)
-        
-        elif choice == 'U':
-            part_id = input("Enter part ID to update: ")
-            quantity = input("Enter quantity to add or subtract (use - for subtracting): ")
-            
-            update_part(part_id, quantity)
-        
-        elif choice == 'D':
-            part_id = input("Enter part ID to delete: ")
-            
-            delete_part(part_id)
-        
-        elif choice == 'V':
-            view_inventory()
-        
-        elif choice == 'Q':
-            break
+    def add_part(self, part_number, description, quantity):
+        if part_number in self.inventory:
+            self.inventory[part_number]['Quantity'] += quantity
         else:
-            print("Invalid choice. Please try again.")
+            self.inventory[part_number] = {'Description': description, 'Quantity': quantity}
+        self.save_inventory()
+
+    def remove_part(self, part_number, quantity):
+        if part_number in self.inventory and self.inventory[part_number]['Quantity'] >= quantity:
+            self.inventory[part_number]['Quantity'] -= quantity
+            if self.inventory[part_number]['Quantity'] == 0:
+                del self.inventory[part_number]
+            self.save_inventory()
+        else:
+            print("Error: Not enough inventory or part not found")
+
+    def get_inventory(self):
+        return self.inventory
+
+    def save_inventory(self):
+        with open(self.inventory_file, mode='w', newline='') as file:
+            fieldnames = ['PartNumber', 'Description', 'Quantity']
+            writer = csv.DictWriter(file, fieldnames=fieldnames)
+            writer.writeheader()
+            for part_number, data in self.inventory.items():
+                writer.writerow({'PartNumber': part_number, 'Description': data['Description'], 'Quantity': data['Quantity']})
+
+def main():
+    inventory_file = 'inventory.csv'
+    inventory_manager = InventoryManagement(inventory_file)
+    
+    # Examples of how to use the inventory management
+    inventory_manager.add_part('PN1234', 'Widget A', 10)
+    inventory_manager.add_part('PN5678', 'Widget B', 5)
+    inventory_manager.remove_part('PN1234', 3)
+    
+    current_inventory = inventory_manager.get_inventory()
+    print("Current Inventory: ")
+    for part, data in current_inventory.items():
+        print(f"Part Number: {part}, Description: {data['Description']}, Quantity: {data['Quantity']}")
+
+if __name__ == '__main__':
+    main()
