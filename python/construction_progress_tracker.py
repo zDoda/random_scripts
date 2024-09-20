@@ -1,90 +1,56 @@
 #!/usr/bin/env python3
 
 import os
-import json
-from datetime import datetime, timedelta
-import csv
+import datetime
+import pandas as pd
 
-# Project Initialization with Initial Data
-class Project:
-    def __init__(self, name, start_date, end_date, total_budget, tasks):
-        self.name = name
-        self.start_date = datetime.strptime(start_date, '%Y-%m-%d')
-        self.end_date = datetime.strptime(end_date, '%Y-%m-%d')
-        self.total_budget = total_budget
-        self.tasks = tasks  # List of Task objects
-    
-    # Calculate the progress based on tasks completed
-    def compute_progress(self):
-        completed_tasks = sum(task.is_completed for task in self.tasks)
-        return (completed_tasks / len(self.tasks)) * 100
+# Define the path where progress photos and reports are stored
+PHOTO_DIR = '/path/to/progress_photos'
+REPORT_DIR = '/path/to/progress_reports'
 
-    # Check if the Project is within the budget
-    def check_budget(self):
-        current_expense = sum(task.cost for task in self.tasks)
-        return current_expense <= self.total_budget
+# Define the structure of your project's progress information
+project_stages = [
+    'Design',
+    'Foundation',
+    'Framing',
+    'Roofing',
+    'Exterior Finishing',
+    'Interior Finishing',
+    'Landscaping',
+    'Final Touches'
+]
 
-# Task for the construction project
-class Task:
-    def __init__(self, name, start_date, end_date, cost, responsible_person):
-        self.name = name
-        self.start_date = datetime.strptime(start_date, '%Y-%m-%d')
-        self.end_date = datetime.strptime(end_date, '%Y-%m-%d')
-        self.duration = (self.end_date - self.start_date).days
-        self.cost = cost
-        self.responsible_person = responsible_person
-        self.is_completed = False
-    
-    # Complete the task
-    def complete_task(self):
-        self.is_completed = True
+# Function to automate tracking of progress
+def track_progress(project_stages, photo_dir, report_dir):
 
-# Function to load tasks from a CSV file
-def load_tasks_from_csv(csv_file):
-    tasks = []
-    with open(csv_file, mode='r') as file:
-        reader = csv.DictReader(file)
-        for row in reader:
-            tasks.append(
-                Task(
-                    name=row['Name'],
-                    start_date=row['StartDate'],
-                    end_date=row['EndDate'],
-                    cost=float(row['Cost']),
-                    responsible_person=row['ResponsiblePerson']
-                )
-            )
-    return tasks
+    # Get the current date for timestamp
+    today = datetime.datetime.today().strftime('%Y-%m-%d')
 
-# Main function to automate construction project progress tracking
+    # Create a DataFrame to store the progress information
+    progress_df = pd.DataFrame(columns=['Date', 'Stage', 'Photo', 'Report'])
+
+    # Iterate over the project stages and check for new files
+    for stage in project_stages:
+        # Paths for photos and reports of each stage
+        stage_photo_dir = os.path.join(photo_dir, stage)
+        stage_report_dir = os.path.join(report_dir, stage)
+
+        # Latest photo and report for the stage
+        latest_photo = max([os.path.join(stage_photo_dir, f) for f in os.listdir(stage_photo_dir) if f.endswith('.jpg')], default=None)
+        latest_report = max([os.path.join(stage_report_dir, f) for f in os.listdir(stage_report_dir) if f.endswith('.pdf')], default=None)
+
+        # Append the records to the DataFrame
+        progress_record = {'Date': today, 'Stage': stage, 'Photo': latest_photo, 'Report': latest_report}
+        progress_df = progress_df.append(progress_record, ignore_index=True)
+
+    # Save the progress information to a CSV file
+    progress_df.to_csv(os.path.join(report_dir, f'progress_tracker_{today}.csv'), index=False)
+
+    print(f"Progress tracking for {today} is done.")
+
+# Main function to run the tracker
 def main():
-    # Load tasks from a CSV file
-    csv_file_path = 'tasks.csv'
-    tasks = load_tasks_from_csv(csv_file_path)
+    track_progress(project_stages, PHOTO_DIR, REPORT_DIR)
 
-    # Sample initialization of a project
-    project = Project(
-        name='City Center Tower',
-        start_date='2023-01-01',
-        end_date='2024-12-31',
-        total_budget=50000000,
-        tasks=tasks
-    )
-
-    # Check the project progress
-    project_progress = project.compute_progress()
-    print(f"Project '{project.name}' is {project_progress:.2f}% completed.")
-
-    # Check if the project is within the budget
-    within_budget = project.check_budget()
-    print(f"Project '{project.name}' is within the budget: {within_budget}")
-
-    # Example of updating a task status to completed
-    tasks[0].complete_task()
-
-    # Recalculate progress after task completion
-    updated_project_progress = project.compute_progress()
-    print(f"Project '{project.name}' is {updated_project_progress:.2f}% completed after completing Task: {tasks[0].name}")
-
-if __name__ == "__main__":
+if __name__ == '__main__':
     main()
