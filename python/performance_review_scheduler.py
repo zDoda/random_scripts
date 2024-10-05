@@ -1,70 +1,70 @@
 #!/usr/bin/env python3
 
+import csv
 import datetime
+from dateutil.relativedelta import relativedelta
 import smtplib
 from email.message import EmailMessage
-import calendar
 
-# Configuration: Set up the details for the email server and the performance review period
-SMTP_SERVER = 'smtp.example.com'
-SMTP_PORT = 587
-SMTP_USERNAME = 'your-email@example.com'
-SMTP_PASSWORD = 'your-password'
-FROM_EMAIL = 'your-email@example.com'
-TO_EMAILS = ['employee1@example.com', 'employee2@example.com']  # Add employee emails
-SUBJECT = 'Performance Review Schedule'
-MESSAGE_TEMPLATE = '''Hello {name},
+# Configuration start
+csv_file_path = 'employees.csv' # Path to the CSV file with employee details
+smtp_server = 'smtp.example.com' # SMTP server
+smtp_port = 587 # SMTP port
+email_username = 'your_email@example.com' # Your email that you'll use to send notifications
+email_password = 'your_password' # Your email password
+from_address = email_username # From address for the email notification
+subject = 'Upcoming Performance Review' # Subject for the email notification
+template = '''Dear {name},
 
-This is a reminder that your performance review has been scheduled for {date}.
-Please make sure to prepare the necessary documents and reports before the meeting.
+This is a gentle reminder that your next performance review is scheduled for {review_date}. 
+Please make sure you have prepared all necessary documents and reports.
 
-Best,
-HR Team
+Best regards,
+
+Performance Review Team
 '''
+# Configuration end
 
-# Customize these as per your company's scheduling policy
-PERFORMANCE_REVIEW_CYCLE = 6  # months
-START_MONTH = 1  # January
-START_DAY = 15  # 15th of January
+# Get today's date
+today = datetime.date.today()
 
-def schedule_performance_reviews(start_month, start_day, cycle_months):
-    current_year = datetime.datetime.today().year
-    current_month = datetime.datetime.today().month
+# Open the CSV file and read employee details
+employees = []
+with open(csv_file_path, newline='') as csvfile:
+    reader = csv.DictReader(csvfile)
+    for row in reader:
+        # Convert hire_date from string to date
+        hire_date = datetime.datetime.strptime(row['hire_date'], '%Y-%m-%d').date()
+        # Schedule the review every year on the hire_date
+        next_review_date = hire_date + relativedelta(years=(today.year - hire_date.year))
+        # If the review date has passed for this year, schedule it for next year
+        if next_review_date < today:
+            next_review_date = next_review_date + relativedelta(years=1)
+        employees.append({
+            'name': row['name'],
+            'email': row['email'],
+            'next_review_date': next_review_date
+        })
 
-    # Calculate the month for the next review
-    months_to_next_review = cycle_months - ((current_month - start_month) % cycle_months)
-    next_review_month = (current_month + months_to_next_review) % 12 or 12
+# Set up server connection
+server = smtplib.SMTP(smtp_server, smtp_port)
+server.ehlo()
+server.starttls()
+server.login(email_username, email_password)
 
-    # Calculate the date for the next review
-    _, last_day_of_month = calendar.monthrange(current_year, next_review_month)
-    next_review_day = min(start_day, last_day_of_month)
-    next_review_date = datetime.date(current_year, next_review_month, next_review_day)
+# Send reminders
+for employee in employees:
+    if employee['next_review_date'] == today:
+        # Form message
+        message = EmailMessage()
+        message.set_content(template.format(name=employee['name'], review_date=employee['next_review_date']))
+        message['Subject'] = subject
+        message['From'] = from_address
+        message['To'] = employee['email']
+        
+        # Send the email
+        server.send_message(message)
+        print(f'Sent review reminder to: {employee["email"]}')
 
-    return next_review_date
-
-def send_email(to_email, name, review_date):
-    message = EmailMessage()
-    message.set_content(MESSAGE_TEMPLATE.format(name=name, date=review_date))
-    message['Subject'] = SUBJECT
-    message['From'] = FROM_EMAIL
-    message['To'] = to_email
-
-    # Send the email via the configured SMTP server
-    with smtplib.SMTP(SMTP_SERVER, SMTP_PORT) as smtp_server:
-        smtp_server.starttls()
-        smtp_server.login(SMTP_USERNAME, SMTP_PASSWORD)
-        smtp_server.send_message(message)
-    
-def main():
-    # Automate scheduling of performance reviews
-    next_review_date = schedule_performance_reviews(START_MONTH, START_DAY, PERFORMANCE_REVIEW_CYCLE)
-    
-    for email in TO_EMAILS:
-        # Assume emails are in the format of "username@example.com"
-        # Splitting the email to use the username as the employee's name for now
-        name = email.split('@')[0].capitalize()
-        send_email(email, name, next_review_date)
-
-# Run the main function
-if __name__ == '__main__':
-    main()
+# Close server connection
+server.quit()
