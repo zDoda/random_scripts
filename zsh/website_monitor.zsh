@@ -1,19 +1,23 @@
 #!/bin/zsh
 
-# Configuration
-WEBSITE_URL="http://example.com"
-ALERT_EMAIL="alert@example.com"
-CHECK_INTERVAL=60 # In seconds
+# Website URL to monitor
+WEBSITE_URL="https://example.com"
 
-# Function to check the website status
+# Email for sending alert
+ALERT_EMAIL="your-email@example.com"
+
+# Function to check if a website is up
 check_website() {
-    if ! curl -s --head $WEBSITE_URL | grep "200 OK" > /dev/null; then
-        echo "Website $WEBSITE_URL seems to be down" | mail -s "Website Down Alert" $ALERT_EMAIL
+    if ! curl --silent --head --fail "$WEBSITE_URL" > /dev/null; then
+        echo "$WEBSITE_URL appears to be down" | mail -s "$WEBSITE_URL DOWN!" $ALERT_EMAIL
+        echo "Alert has been sent to $ALERT_EMAIL"
+    else
+        echo "$WEBSITE_URL is up and running."
     fi
 }
 
-# Main script loop
+# Infinite loop to keep the script running
 while true; do
     check_website
-    sleep $CHECK_INTERVAL
+    sleep 60 # Check every 60 seconds
 done
