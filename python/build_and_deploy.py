@@ -1,33 +1,39 @@
 #!/usr/bin/env python3
+
 import subprocess
 import os
 
-# Define build and deploy functions
-def build():
-    print("Starting build process...")
-    # Add your build commands here, for example:
-    # subprocess.run(["npm", "install"], check=True)
-    # subprocess.run(["npm", "run", "build"], check=True)
-    print("Build process completed.")
+# Define the directory where your project is located.
+project_dir = '/path/to/your/project'
 
-def deploy():
-    print("Starting deployment process...")
-    # Add your deployment commands here, for example:
-    # subprocess.run(["scp", "-r", "build/", "user@server:/path/to/deploy"], check=True)
-    print("Deployment process completed.")
+# Define the commands for building and deploying your project.
+build_command = './build.sh'  # Replace with your build command.
+deploy_command = './deploy.sh'  # Replace with your deploy command.
+
+def run_command(command, work_dir):
+    """Run a shell command in a specific working directory."""
+    try:
+        subprocess.check_call(command, shell=True, cwd=work_dir)
+        print(f"Command '{command}' executed successfully.")
+    except subprocess.CalledProcessError as e:
+        print(f"Error occurred while executing '{command}': {e}")
+
+def build_project():
+    """Build the project using the defined build command."""
+    print("Starting the build process...")
+    run_command(build_command, project_dir)
+
+def deploy_project():
+    """Deploy the project using the defined deploy command."""
+    print("Starting the deployment process...")
+    run_command(deploy_command, project_dir)
 
 def main():
-    try:
-        # First, we build the project
-        build()
-        
-        # Then, if build succeeds, we deploy the project
-        deploy()
+    # Build the project
+    build_project()
     
-    except subprocess.CalledProcessError as e:
-        print(f"An error occurred: {e}")
-    except Exception as e:
-        print(f"An unexpected error occurred: {e}")
+    # Deploy the project
+    deploy_project()
 
 if __name__ == "__main__":
     main()
