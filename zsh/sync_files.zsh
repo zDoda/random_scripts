@@ -1,18 +1,21 @@
 #!/bin/zsh
 
-# Define local and remote directories
-local_dir="/path/to/local/dir"
-remote_dir="user@remote.server:/path/to/remote/dir"
-remote_backup_dir="user@remote.server:/path/to/remote/backup/dir"
+# Configuration variables
+SOURCE_DIR="/path/to/local/directory"
+DEST_DIR="remoteuser@remotehost:/path/to/remote/directory"
+SSH_KEY="/path/to/private/key"
+RSYNC_OPTIONS="-avz --delete"
 
-# Current date for backup
-current_date=$(date "+%Y-%m-%d_%H-%M-%S")
+function sync_to_remote() {
+    # Sync local source directory to remote destination
+    rsync $RSYNC_OPTIONS -e "ssh -i $SSH_KEY" "$SOURCE_DIR" "$DEST_DIR"
+}
 
-# Syncing local directory to remote server directory
-rsync -avz --delete $local_dir $remote_dir
+function sync_from_remote() {
+    # Sync remote source to local destination
+    rsync $RSYNC_OPTIONS -e "ssh -i $SSH_KEY" "$DEST_DIR" "$SOURCE_DIR"
+}
 
-# Create a backup of the remote directory before syncing
-ssh user@remote.server "cp -a $remote_dir $remote_backup_dir/backup_$current_date"
-
-# Now, sync the local directory to remote server directory using the backup
-rsync -avz --delete --backup --backup-dir=$remote_backup_dir/backup_$current_date $local_dir $remote_dir
+# Execute the sync functions
+sync_to_remote
+# sync_from_remote  # Uncomment to sync from remote to local instead
