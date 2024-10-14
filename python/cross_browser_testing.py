@@ -1,52 +1,36 @@
 #!/usr/bin/env python3
-
+import time
 from selenium import webdriver
+from selenium.webdriver.common.by import By
+from selenium.webdriver.common.keys import Keys
 from webdriver_manager.chrome import ChromeDriverManager
 from webdriver_manager.firefox import GeckoDriverManager
 from webdriver_manager.microsoft import EdgeChromiumDriverManager
-from selenium.webdriver.common.by import By
-import time
 
-# Define a function to test a specific browser
-def test_browser(driver, browser_name):
-    try:
-        # Open the browser and go to the desired webpage
-        driver.get("http://example.com") # Replace with your desired URL
+def test_browser(browser_name):
+    if browser_name == 'Chrome':
+        driver = webdriver.Chrome(ChromeDriverManager().install())
+    elif browser_name == 'Firefox':
+        driver = webdriver.Firefox(executable_path=GeckoDriverManager().install())
+    elif browser_name == 'Edge':
+        driver = webdriver.Edge(EdgeChromiumDriverManager().install())
+    else:
+        raise ValueError(f"{browser_name} is not a supported browser")
 
-        # Perform the desired tests, e.g., checking if a certain element exists
-        element = driver.find_element(By.ID, "someElementId") # Replace with your actual element information
+    driver.maximize_window()
+    driver.get('http://example.com')
+    
+    # Example test: Check if the title contains the word 'Example Domain'
+    assert 'Example Domain' in driver.title
 
-        # Check if the element is visible or has the expected text/value
-        if element.is_displayed():
-            print(f"{browser_name}: Element is displayed as expected.")
-        else:
-            print(f"{browser_name}: WARNING! Element is not displayed.")
+    # here you can add more tests/asserts
 
-    except Exception as e:
-        print(f"{browser_name}: Encountered an exception - {e}")
+    # Close the browser window
+    driver.quit()
 
-    finally:
-        # Close the browser window
-        driver.quit()
-
-
-# Test on Chrome
-chrome_options = webdriver.ChromeOptions()
-chrome_options.add_argument('--no-sandbox')
-chrome_options.add_argument('--disable-dev-shm-usage')
-chrome_driver = webdriver.Chrome(ChromeDriverManager().install(), options=chrome_options)
-test_browser(chrome_driver, "Chrome")
-
-# Test on Firefox
-firefox_options = webdriver.FirefoxOptions()
-firefox_options.add_argument('--no-sandbox')
-firefox_driver = webdriver.Firefox(executable_path=GeckoDriverManager().install(), options=firefox_options)
-test_browser(firefox_driver, "Firefox")
-
-# Test on Edge
-edge_options = webdriver.EdgeOptions()
-edge_options.add_argument('--no-sandbox')
-edge_driver = webdriver.Edge(EdgeChromiumDriverManager().install(), options=edge_options)
-test_browser(edge_driver, "Edge")
-
-print("Cross-browser compatibility testing completed.")
+if __name__ == "__main__":
+    browsers = ['Chrome', 'Firefox', 'Edge']
+    for browser in browsers:
+        print(f"Testing in {browser}")
+        test_browser(browser)
+        print(f"Done testing in {browser}")
