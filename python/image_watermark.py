@@ -1,46 +1,55 @@
 #!/usr/bin/env python3
+from PIL import Image, ImageDraw, ImageFont
 import os
-from PIL import Image
 
-def add_watermark(input_image_path, output_image_path, watermark_image_path, position):
-    base_image = Image.open(input_image_path)
-    watermark = Image.open(watermark_image_path)
-    # Assuming the watermark is transparent and its size is appropriate for the base image
-    # You may need to resize or modify the watermark image to better fit your use case
-    
-    # calculate the position
-    if position == 'bottom-right':
-        x = base_image.width - watermark.width
-        y = base_image.height - watermark.height
-    elif position == 'bottom-left':
-        x = 0
-        y = base_image.height - watermark.height
-    elif position == 'top-right':
-        x = base_image.width - watermark.width
-        y = 0
-    elif position == 'top-left':
-        x = 0
-        y = 0
-    else:
-        x = (base_image.width - watermark.width) // 2
-        y = (base_image.height - watermark.height) // 2
+def add_watermark(input_image_path, output_image_path, watermark_text, position=(0, 0)):
+    # Open the original image
+    original_image = Image.open(input_image_path)
 
-    # Applying the watermark
-    transparent = Image.new('RGBA', base_image.size)
-    transparent.paste(base_image, (0, 0))
-    transparent.paste(watermark, (x, y), mask=watermark)
-    
-    # If base image is not 'RGBA', convert it back to the original mode
-    if base_image.mode != 'RGBA':
-        transparent = transparent.convert(base_image.mode)
-    
-    # Save watermarked image
-    transparent.save(output_image_path)
+    # Create a drawable image
+    watermark_image = Image.new('RGBA', original_image.size)
+    # Create a drawing context
+    draw = ImageDraw.Draw(watermark_image)
 
-if __name__ == "__main__":
-    # Example usage
-    input_path = "input.jpg"
-    output_path = "watermarked.jpg"
-    watermark_path = "watermark.png"
-    watermark_position = "bottom-right"  # Options: 'center', 'top-left', 'top-right', 'bottom-left', 'bottom-right'
-    add_watermark(input_path, output_path, watermark_path, watermark_position)
+    # Specify a font and size for the watermark
+    font = ImageFont.truetype('arial.ttf', 36)
+
+    # Get text size
+    text_width, text_height = draw.textsize(watermark_text, font)
+
+    # Calculate the position of the watermark
+    if position == 'center':
+        x = (watermark_image.size[0] - text_width) // 2
+        y = (watermark_image.size[1] - text_height) // 2
+        position = (x, y)
+    elif position == 'bottom_right':
+        x = watermark_image.size[0] - text_width - 10
+        y = watermark_image.size[1] - text_height - 10
+        position = (x, y)
+
+    # Position the text at the bottom right
+    draw.text(position, watermark_text, (255, 255, 255), font=font)
+
+    # Combine the original image with the watermark
+    watermarked_image = Image.alpha_composite(original_image.convert('RGBA'), watermark_image)
+
+    # Save the watermarked image
+    watermarked_image.save(output_image_path, 'PNG')
+
+# Example usage:
+# add_watermark('input.jpg', 'watermarked.png', '© YourName', 'bottom_right')
+
+# If you want to process all images in a directory and add watermarks to them
+def batch_watermark_images(input_dir, output_dir, watermark_text, position='bottom_right'):
+    if not os.path.exists(output_dir):
+        os.makedirs(output_dir)
+
+    for filename in os.listdir(input_dir):
+        if filename.lower().endswith(('.png', '.jpg', '.jpeg')):
+            input_image_path = os.path.join(input_dir, filename)
+            output_image_path = os.path.join(output_dir, 'watermarked_' + filename)
+
+            add_watermark(input_image_path, output_image_path, watermark_text, position)
+
+# Example batch processing:
+# batch_watermark_images('path_to_input_images', 'path_to_output_images', '© YourName', 'bottom_right')
