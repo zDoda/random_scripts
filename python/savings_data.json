@@ -1,0 +1,74 @@
+{
+  "total_balance": 5119.0,
+  "buckets": {
+    "Car Repairs": 5.684341886080802e-14,
+    "Vacation": 511.90000000000003,
+    "House Down Payment": 0.0,
+    "Emergency Savings": 1279.75,
+    "UIUC": 3000.0,
+    "Medical": 2.842170943040401e-14,
+    "Golf": 2.842170943040401e-14,
+    "PC Setup": 327.35,
+    "Gifts": 2.842170943040401e-14
+  },
+  "transactions": [
+    {
+      "date": "2025-03-07 05:25:32",
+      "type": "deposit",
+      "amount": 5119.0,
+      "allocations": {
+        "Car Repairs": 511.90000000000003,
+        "Vacation": 511.90000000000003,
+        "House Down Payment": 767.85,
+        "Emergency Savings": 1279.75,
+        "UIUC": 767.85,
+        "Medical": 255.95000000000002,
+        "Golf": 255.95000000000002,
+        "PC Setup": 511.90000000000003,
+        "Gifts": 255.95000000000002
+      }
+    },
+    {
+      "date": "2025-03-07 05:26:16",
+      "type": "reallocation",
+      "amount": 511.9,
+      "from_bucket": "Car Repairs",
+      "to_bucket": "UIUC"
+    },
+    {
+      "date": "2025-03-07 05:26:42",
+      "type": "reallocation",
+      "amount": 255.95,
+      "from_bucket": "Golf",
+      "to_bucket": "UIUC"
+    },
+    {
+      "date": "2025-03-07 05:27:28",
+      "type": "reallocation",
+      "amount": 767.85,
+      "from_bucket": "House Down Payment",
+      "to_bucket": "UIUC"
+    },
+    {
+      "date": "2025-03-07 05:28:11",
+      "type": "reallocation",
+      "amount": 255.95,
+      "from_bucket": "Medical",
+      "to_bucket": "UIUC"
+    },
+    {
+      "date": "2025-03-07 05:29:15",
+      "type": "reallocation",
+      "amount": 255.95,
+      "from_bucket": "Gifts",
+      "to_bucket": "PC Setup"
+    },
+    {
+      "date": "2025-03-07 05:29:50",
+      "type": "reallocation",
+      "amount": 440.5,
+      "from_bucket": "PC Setup",
+      "to_bucket": "UIUC"
+    }
+  ]
+}
