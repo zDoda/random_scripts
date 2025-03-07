@@ -1,8 +1,8 @@
+#!/usr/bin/env python3
+
 import tkinter as tk
-from tkinter import ttk, messagebox, simpledialog
+from tkinter import PhotoImage, ttk, messagebox
 import json
-import os
-from decimal import Decimal
 import datetime
 
 
@@ -618,6 +618,9 @@ class SavingsBucketApp:
 
 # Main application
 if __name__ == "__main__":
-    root = tk.Tk()
+    root = tk.Tk(className="Muh Savings Buckets")
+    root.wm_title("Muh Savings Buckets")
+    photo = PhotoImage(file="/Users/camdynzook/Github/random_scripts/python/coolfrog.png")
+    root.iconphoto(False, photo)
     app = SavingsBucketApp(root)
     root.mainloop()
